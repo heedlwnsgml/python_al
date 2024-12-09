@@ -1,58 +1,23 @@
 
 # coding: utf-8
 
-# # #. 정렬 알고리즘을 이용한 기말 프로그래밍 과제
-# - 과제 주제: 학생 성적 관리 시스템
-#     - 학생 성적 데이터가 주어졌을 때, 다양한 정렬 알고리즘을 활용해 데이터를 정렬하고 분석하는 프로그램을 작성하세요.
-#     - 이 과제를 통해 정렬 알고리즘의 원리를 이해하고, 실제 데이터에 적용하는 방법을 익히게 됩니다.
-# - 과제 요구사항
-#   - 학생 정보 생성 및 저장:
-#     - 30명의 학생 정보를 무작위로 생성하세요. 각 학생의 정보는 다음과 같습니다:
-#       - 이름: 알파벳 대문자 두 글자 (예: AB, CD)
-#       - 나이: 18 ~ 22 사이의 정수
-#       - 성적: 0 ~ 100 사이의 정수
-#       - 생성된 학생 정보를 리스트에 저장하세요. 각 학생의 정보는 딕셔너리 형태({"이름": "AB", "나이": 19, "성적": 85})로 저장합니다.
-# 
-#   - 정렬 기능 구현:
-#     - 다음 네 가지 정렬 알고리즘을 구현하세요.
-#       - 선택 정렬, 삽입 정렬, 퀵 정렬
-#       - 기수 정렬 (성적 기준으로 정렬할 때만 사용 가능)
-#     - 각 정렬 알고리즘은 특정 필드를 기준으로 학생 리스트를 정렬할 수 있어야 합니다:
-#       - 이름 (알파벳 순서)
-#       - 나이 (오름차순)
-#       - 성적 (오름차순)
-#   
-#   - 메뉴 및 사용자 입력:
-#     - 프로그램 시작 시, 사용자에게 다음 메뉴를 제공합니다:
-#       - 이름을 기준으로 정렬
-#       - 나이를 기준으로 정렬
-#       - 성적을 기준으로 정렬
-#       - 프로그램 종료
-#     - 사용자 입력에 따라 정렬 기준과 정렬 알고리즘을 선택하도록 합니다.
-#     - 정렬된 결과를 화면에 출력하세요.
-# 
-#   - 단계별 출력 (선택 사항):
-#     - 선택한 정렬 알고리즘의 정렬 과정을 단계별로 출력하는 기능을 구현합니다.
-#       - 예를 들어, 선택 정렬의 경우 각 단계마다 리스트 상태를 출력하여 정렬 과정이 어떻게 진행되는지 보여줍니다.
-# 
-# - 제출물
-#     - 코드: 파이썬 파일로 정렬 프로그램의 전체 코드 제출.
-#     - 개인 github에 결과물 업로드하기
-#     - github 계정(주소)은 cyber 캠퍼스에 업로드하기
-
 # In[ ]:
 
 
 import random
+import json
 
-# 1. 학생 정보 생성
-def generate_students(num_students=30):
+# 1. 학생 정보 생성 및 저장
+def generate_students(num_students=30, save_to_file=False):
     students = []
     for _ in range(num_students):
         name = "".join(random.choices("ABCDEFGHIJKLMNOPQRSTUVWXYZ", k=2))
         age = random.randint(18, 22)
         score = random.randint(0, 100)
         students.append({"이름": name, "나이": age, "성적": score})
+    if save_to_file:
+        with open("students.json", "w", encoding="utf-8") as f:
+            json.dump(students, f, ensure_ascii=False, indent=4)
     return students
 
 # 2. 정렬 알고리즘
@@ -61,12 +26,12 @@ def selection_sort(data, key, step=False):
     n = len(data)
     for i in range(n):
         min_idx = i
-        for j in range(i+1, n):
+        for j in range(i + 1, n):
             if data[j][key] < data[min_idx][key]:
                 min_idx = j
         data[i], data[min_idx] = data[min_idx], data[i]
         if step:
-            print(f"Step {i+1}: {data}\n")
+            print(f"Step {i + 1}: {data}\n")
     return data
 
 # 삽입 정렬
@@ -105,7 +70,7 @@ def quick_sort(data, key, step=False):
     _quick_sort(data, 0, len(data) - 1)
     return data
 
-# 기수 정렬
+# 기수 정렬 (계수 정렬 포함)
 def radix_sort(data, key, step=False):
     max_val = max(student[key] for student in data)
     exp = 1
@@ -119,26 +84,31 @@ def counting_sort(data, key, exp, step):
     output = [0] * n
     count = [0] * 10
 
+    # 계수 생성
     for student in data:
         index = (student[key] // exp) % 10
         count[index] += 1
 
+    # 누적합 계산
     for i in range(1, 10):
         count[i] += count[i - 1]
 
+    # 출력 배열 생성
     for i in range(n - 1, -1, -1):
         index = (data[i][key] // exp) % 10
         output[count[index] - 1] = data[i]
         count[index] -= 1
 
+    # 정렬된 배열 복사
     for i in range(n):
         data[i] = output[i]
+
     if step:
         print(f"After exp {exp}: {data}\n")
 
-# 3. 메뉴 및 사용자 입력 (수정)
+# 3. 메뉴 및 사용자 입력
 def main():
-    students = generate_students(10)  # 예시로 10명의 학생 데이터를 생성
+    students = generate_students(30, save_to_file=True)  # 30명의 학생 데이터를 생성 및 저장
     while True:
         print("\n=== 학생 성적 관리 시스템 ===")
         print("1. 이름을 기준으로 정렬")
@@ -154,7 +124,7 @@ def main():
         key_map = {"1": "이름", "2": "나이", "3": "성적"}
         if choice in key_map:
             key = key_map[choice]
-            while True:  # 정렬 메뉴 반복
+            while True:
                 print("\n1. 선택 정렬")
                 print("2. 삽입 정렬")
                 print("3. 퀵 정렬")
@@ -172,7 +142,7 @@ def main():
                         print("\n=== 정렬 결과 ===")
                         for student in sorted_data:
                             print(student)
-                    break  # 정렬 완료 후 상위 메뉴로 이동
+                    break
                 else:
                     print("잘못된 입력입니다. 정렬 메뉴를 다시 선택하세요.")
         else:
