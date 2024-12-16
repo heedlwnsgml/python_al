@@ -1,14 +1,14 @@
 
 # coding: utf-8
 
-# In[ ]:
+# In[3]:
 
 
 import random
 import json
 
 # 1. 학생 정보 생성 및 저장
-def generate_students(num_students=30, save_to_file=False):
+def generate_students(num_students=30, save_to_file=False, filename=" "):
     students = []
     for _ in range(num_students):
         name = "".join(random.choices("ABCDEFGHIJKLMNOPQRSTUVWXYZ", k=2))
@@ -16,7 +16,7 @@ def generate_students(num_students=30, save_to_file=False):
         score = random.randint(0, 100)
         students.append({"이름": name, "나이": age, "성적": score})
     if save_to_file:
-        with open("students.json", "w", encoding="utf-8") as f:
+        with open(filename, "w", encoding="utf-8") as f:
             json.dump(students, f, ensure_ascii=False, indent=4)
     return students
 
@@ -108,14 +108,22 @@ def counting_sort(data, key, exp, step):
 
 # 3. 메뉴 및 사용자 입력
 def main():
-    students = generate_students(30, save_to_file=True)  # 30명의 학생 데이터를 생성 및 저장
+    file_name = input("파일 이름을 입력하세요 (확장자 없이 입력하세요): ")
+    
+    # 파일명이 확장자를 포함하지 않으면 '.json' 추가
+    if not file_name.endswith(".json"):
+        file_name += ".json"
+    
+    students = generate_students(30, save_to_file=True, filename=file_name)  # 30명의 학생 데이터를 생성 및 저장
+    history = []  # 사용자 선택 내역을 기록할 리스트
+
     while True:
         print("\n=== 학생 성적 관리 시스템 ===")
         print("1. 이름을 기준으로 정렬")
         print("2. 나이를 기준으로 정렬")
         print("3. 성적을 기준으로 정렬")
         print("4. 종료")
-        choice = input("정렬기준을 선택하세요 (1, 2, 3, 4): ")
+        choice = input("정렬 기준을 선택하세요 (1, 2, 3, 4): ")
 
         if choice == "4":
             print("프로그램을 종료합니다.")
@@ -124,16 +132,45 @@ def main():
         key_map = {"1": "이름", "2": "나이", "3": "성적"}
         if choice in key_map:
             key = key_map[choice]
+            user_choice = {"정렬 기준": key}  # 사용자의 선택 저장
             while True:
-                print("\n1. 선택 정렬")
-                print("2. 삽입 정렬")
-                print("3. 퀵 정렬")
-                print("4. 기수 정렬 (성적 기준으로 정렬할 때만 사용 가능)")
-                algo_choice = input("정렬 알고리즘을 선택하세요 (1, 2, 3, 4): ")
+                
+                if choice == "3":
+                    while True:
+                        print("\n1. 선택 정렬")
+                        print("2. 삽입 정렬")
+                        print("3. 퀵 정렬")
+                        print("4. 기수 정렬")
+                        algo_choice = input("정렬 알고리즘을 선택하세요 (1, 2, 3, 4): ")
+                        if algo_choice in ["1", "2", "3", "4"]:
+                            user_choice["알고리즘"] = algo_choice  # 선택한 알고리즘 저장
+                            break
+                        else:
+                            print("잘못된 입력입니다. 1, 2, 3, 4 중 하나를 입력해주세요.\n")
+                else:
+                    while True:
+                        print("\n1. 선택 정렬")
+                        print("2. 삽입 정렬")
+                        print("3. 퀵 정렬")
+                        algo_choice = input("정렬 알고리즘을 선택하세요 (1, 2, 3): ")
+                        if algo_choice in ["1", "2", "3"]:  # 1, 2, 3 중 하나가 입력되면
+                            user_choice["알고리즘"] = algo_choice  # 선택한 알고리즘 저장
+                            break  # 유효한 입력이면 반복 종료
+                        else:
+                            print("잘못된 입력입니다. 1, 2, 3 중 하나를 입력해주세요.\n")
 
                 algorithms = {"1": selection_sort, "2": insertion_sort, "3": quick_sort, "4": radix_sort}
                 if algo_choice in algorithms:
-                    step = input("단계별 출력을 보시겠습니까? (y/n): ").lower() == "y"
+                    # 단계별 출력 여부 확인
+                    while True:
+                        step = input("단계별 출력을 보시겠습니까? (y/n): ").lower()
+                        if step == "y" or step == "n":
+                            step = step == "y"  # "y"이면 True, "n"이면 False
+                            user_choice["단계별 출력"] = step  # 단계별 출력 여부 저장
+                            break
+                        else:
+                            print("잘못된 입력입니다. 'y' 또는 'n'을 입력해주세요.")
+                    
                     data_copy = students.copy()
                     if algo_choice == "4" and key != "성적":
                         print("기수 정렬은 성적 기준으로만 사용 가능합니다.")
@@ -142,11 +179,21 @@ def main():
                         print("\n=== 정렬 결과 ===")
                         for student in sorted_data:
                             print(student)
+                        
+                        # 사용자 선택 내역에 정렬된 데이터를 추가
+                        user_choice["정렬 결과"] = sorted_data
+                        history.append(user_choice)  # 사용자가 선택한 내역과 결과를 기록
                     break
                 else:
                     print("잘못된 입력입니다. 정렬 메뉴를 다시 선택하세요.")
         else:
             print("잘못된 입력입니다. 처음 메뉴로 돌아갑니다.")
+
+    # 사용자가 종료한 후 선택 내역을 파일로 저장
+    with open(file_name, "w", encoding="utf-8") as f:
+        json.dump(history, f, ensure_ascii=False, indent=4)
+    print(f"사용자의 선택 내역과 실행 결과가 '{file_name}' 파일에 저장되었습니다.")
+
 
 if __name__ == "__main__":
     main()
